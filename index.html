@@ -1,0 +1,127 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Metu Prototype</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #f5f5dc; /* beige claro */
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background-color: #f5f5dc;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let ground = canvas.height - 100;
+    let gravity = 1;
+
+    const metu = {
+      x: 100,
+      y: ground,
+      width: 50,
+      height: 50,
+      velocityY: 0,
+      jumping: false,
+      color: "black"
+    };
+
+    const obstacle = {
+      x: canvas.width,
+      y: ground,
+      width: 50,
+      height: 50,
+      color: "black",
+      speed: 6
+    };
+
+    const wingItem = {
+      x: canvas.width + 500,
+      y: ground - 150,
+      width: 30,
+      height: 30,
+      color: "black",
+      collected: false
+    };
+
+    let wingsActive = false;
+    let wingsTimer = 0;
+
+    function drawRect(obj) {
+      ctx.fillStyle = obj.color;
+      ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+    }
+
+    function gameLoop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Wings effect
+      if (wingsActive) {
+        metu.color = "#333";
+        metu.velocityY = -10;
+        wingsTimer--;
+        if (wingsTimer <= 0) {
+          wingsActive = false;
+        }
+      } else {
+        metu.color = "black";
+        if (metu.y < ground) {
+          metu.velocityY += gravity;
+        } else {
+          metu.y = ground;
+          metu.velocityY = 0;
+          metu.jumping = false;
+        }
+      }
+
+      metu.y += metu.velocityY;
+
+      // Move obstacle
+      obstacle.x -= obstacle.speed;
+      if (obstacle.x + obstacle.width < 0) obstacle.x = canvas.width;
+
+      // Move item
+      if (!wingItem.collected) {
+        wingItem.x -= obstacle.speed;
+        if (wingItem.x + wingItem.width < 0) wingItem.x = canvas.width + 500;
+
+        // Collision with player
+        if (
+          metu.x < wingItem.x + wingItem.width &&
+          metu.x + metu.width > wingItem.x &&
+          metu.y < wingItem.y + wingItem.height &&
+          metu.y + metu.height > wingItem.y
+        ) {
+          wingItem.collected = true;
+          wingsActive = true;
+          wingsTimer = 60; // lasts 1 second
+        }
+      }
+
+      // Draw everything
+      drawRect(metu);
+      drawRect(obstacle);
+      if (!wingItem.collected) drawRect(wingItem);
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" && !metu.jumping && !wingsActive) {
+        metu.velocityY = -20;
+        metu.jumping = true;
+      }
+    });
+
+    gameLoop();
+  </script></body>
+</html>
