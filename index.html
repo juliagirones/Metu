@@ -1,117 +1,119 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Metu</title>
   <style>
     body {
       margin: 0;
-      background-color: #f5f1e6; /* color crema/beige */
+      background-color: #f5f0e6; /* crema claro */
+      font-family: Arial, sans-serif;
       overflow: hidden;
-      font-family: sans-serif;
-    }canvas {
-  display: block;
-  background: #000;
-  margin: 0 auto;
-}
+    }
 
-.controls {
-  position: fixed;
-  bottom: 10px;
-  left: 0;
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  z-index: 10;
-}
+    canvas {
+      display: block;
+      margin: 0 auto;
+      background-color: #000; /* fondo del juego negro */
+    }
 
-.controls button {
-  font-size: 1.5rem;
-  padding: 15px 25px;
-  border: none;
-  border-radius: 10px;
-  background-color: #000;
-  color: #f5f1e6;
-  box-shadow: 2px 2px 10px rgba(0,0,0,0.4);
-}
+    #jumpButton, #itemButton {
+      position: fixed;
+      bottom: 20px;
+      width: 100px;
+      height: 60px;
+      font-size: 16px;
+      font-weight: bold;
+      border-radius: 12px;
+      border: none;
+      color: #f5f0e6; /* texto crema */
+      background-color: #000; /* fondo negro */
+      opacity: 0.9;
+      z-index: 1000;
+      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
+    }
 
-.controls button:active {
-  background-color: #333;
-}
+    #jumpButton {
+      right: 20px;
+    }
 
+    #itemButton {
+      left: 20px;
+    }
+
+    @media (max-width: 600px) {
+      #jumpButton, #itemButton {
+        width: 80px;
+        height: 50px;
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>  <div class="controls">
-    <button id="jumpBtn">Saltar</button>
-    <button id="itemBtn">Usar Ítem</button>
-  </div>  <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <button id="jumpButton">SALTAR</button>
+  <button id="itemButton">ÍTEM</button>
 
-    let player = {
-      x: 100,
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const player = {
+      x: 50,
       y: 300,
       width: 50,
       height: 50,
+      color: "#f5f0e6",
       velocityY: 0,
-      jumpForce: 15,
-      grounded: true,
-      color: '#f5f1e6',
+      jumping: false,
     };
 
-    let gravity = 0.8;
-    let isUsingItem = false;
+    const gravity = 0.9;
 
-    function update() {
-      player.velocityY += gravity;
-      player.y += player.velocityY;
-
-      if (player.y >= 300) {
-        player.y = 300;
-        player.velocityY = 0;
-        player.grounded = true;
-      }
-    }
-
-    function draw() {
-      ctx.fillStyle = '#000';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    function drawPlayer() {
       ctx.fillStyle = player.color;
       ctx.fillRect(player.x, player.y, player.width, player.height);
     }
 
-    function gameLoop() {
-      update();
-      draw();
-      requestAnimationFrame(gameLoop);
+    function update() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (player.jumping) {
+        player.velocityY += gravity;
+        player.y += player.velocityY;
+
+        if (player.y >= 300) {
+          player.y = 300;
+          player.jumping = false;
+          player.velocityY = 0;
+        }
+      }
+
+      drawPlayer();
+      requestAnimationFrame(update);
     }
 
     function jump() {
-      if (player.grounded) {
-        player.velocityY = -player.jumpForce;
-        player.grounded = false;
+      if (!player.jumping) {
+        player.velocityY = -15;
+        player.jumping = true;
       }
     }
 
-    function useItem() {
-      // Aquí agregarás lógica para usar ítems más adelante
-      console.log('Usando ítem...');
-      isUsingItem = true;
-      setTimeout(() => isUsingItem = false, 1000);
-    }
+    document.getElementById("jumpButton").addEventListener("click", jump);
 
-    document.getElementById('jumpBtn').addEventListener('click', jump);
-    document.getElementById('itemBtn').addEventListener('click', useItem);
-
-    // Controles con teclado también (por si juega desde compu)
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space') jump();
-      if (e.code === 'KeyE') useItem();
+    document.getElementById("itemButton").addEventListener("click", () => {
+      alert("Usaste un ítem 🧪 (¡aún sin funcionalidad!)");
     });
 
-    gameLoop();
-  </script></body>
+    // Opcional: salto con teclado
+    window.addEventListener("keydown", (e) => {
+      if (e.code === "Space") jump();
+    });
+
+    update();
+  </script>
+</body>
 </html>
