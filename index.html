@@ -1,119 +1,143 @@
-<!DOCTYPE html>
-<html lang="es">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Metu</title>
   <style>
     body {
       margin: 0;
-      background-color: #f5f0e6; /* crema claro */
-      font-family: Arial, sans-serif;
       overflow: hidden;
+      background-color: #f5f5dc; /* fondo beige suave */
     }
-
     canvas {
       display: block;
-      margin: 0 auto;
-      background-color: #000; /* fondo del juego negro */
     }
-
-    #jumpButton, #itemButton {
+    .controls {
       position: fixed;
       bottom: 20px;
-      width: 100px;
-      height: 60px;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 12px;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+    .controls button {
+      padding: 20px 30px;
+      font-size: 1.2rem;
       border: none;
-      color: #f5f0e6; /* texto crema */
-      background-color: #000; /* fondo negro */
-      opacity: 0.9;
-      z-index: 1000;
-      box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.3);
-    }
-
-    #jumpButton {
-      right: 20px;
-    }
-
-    #itemButton {
-      left: 20px;
-    }
-
-    @media (max-width: 600px) {
-      #jumpButton, #itemButton {
-        width: 80px;
-        height: 50px;
-        font-size: 14px;
-      }
+      border-radius: 10px;
+      background-color: #000;
+      color: #fff;
+      opacity: 0.7;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <button id="jumpButton">SALTAR</button>
-  <button id="itemButton">ÍTEM</button>
-
+  <canvas id="gameCanvas"></canvas>
+  <div class="controls">
+    <button id="duckBtn">Agacharse</button>
+    <button id="jumpBtn">Saltar</button>
+  </div>
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-    const player = {
-      x: 50,
-      y: 300,
-      width: 50,
-      height: 50,
-      color: "#f5f0e6",
-      velocityY: 0,
-      jumping: false,
-    };
+let ground = canvas.height - 100;
+let gravity = 1;
+let gameSpeed = 5;
 
-    const gravity = 0.9;
+const player = {
+  x: 150,
+  y: ground,
+  width: 50,
+  height: 50,
+  velocityY: 0,
+  jumping: false,
+  ducking: false,
+  draw() {
+    ctx.beginPath();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#000';
+    ctx.rect(this.x, this.y - this.height, this.width, this.height);
+    ctx.stroke();
+  },
+  update() {
+    if (this.jumping) {
+      this.velocityY += gravity;
+      this.y += this.velocityY;
 
-    function drawPlayer() {
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x, player.y, player.width, player.height);
-    }
-
-    function update() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (player.jumping) {
-        player.velocityY += gravity;
-        player.y += player.velocityY;
-
-        if (player.y >= 300) {
-          player.y = 300;
-          player.jumping = false;
-          player.velocityY = 0;
-        }
-      }
-
-      drawPlayer();
-      requestAnimationFrame(update);
-    }
-
-    function jump() {
-      if (!player.jumping) {
-        player.velocityY = -15;
-        player.jumping = true;
+      if (this.y >= ground) {
+        this.y = ground;
+        this.jumping = false;
+        this.velocityY = 0;
       }
     }
+    if (this.ducking) {
+      this.height = 30;
+    } else {
+      this.height = 50;
+    }
+  }
+};
 
-    document.getElementById("jumpButton").addEventListener("click", jump);
+const obstacles = [];
+function createObstacle() {
+  const height = Math.random() < 0.5 ? 50 : 80;
+  obstacles.push({
+    x: canvas.width,
+    y: ground,
+    width: 30,
+    height,
+    draw() {
+      ctx.beginPath();
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = '#000';
+      ctx.rect(this.x, this.y - this.height, this.width, this.height);
+      ctx.stroke();
+    },
+    update() {
+      this.x -= gameSpeed;
+    }
+  });
+}
 
-    document.getElementById("itemButton").addEventListener("click", () => {
-      alert("Usaste un ítem 🧪 (¡aún sin funcionalidad!)");
-    });
+setInterval(createObstacle, 2000);
 
-    // Opcional: salto con teclado
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") jump();
-    });
+document.getElementById('jumpBtn').addEventListener('click', () => {
+  if (!player.jumping) {
+    player.jumping = true;
+    player.velocityY = -18;
+  }
+});
 
-    update();
+document.getElementById('duckBtn').addEventListener('mousedown', () => {
+  player.ducking = true;
+});
+document.getElementById('duckBtn').addEventListener('mouseup', () => {
+  player.ducking = false;
+});
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  player.update();
+  player.draw();
+
+  for (let i = obstacles.length - 1; i >= 0; i--) {
+    const obs = obstacles[i];
+    obs.update();
+    obs.draw();
+
+    if (obs.x + obs.width < 0) {
+      obstacles.splice(i, 1);
+    }
+  }
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
   </script>
 </body>
 </html>
