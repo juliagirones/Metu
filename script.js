@@ -1,11 +1,121 @@
-// script.js const scenes = [ { text: "Metu y Eka se adentran en el bosque, los árboles crujen bajo sus pasos.", choices: [ { text: "Seguir el canto de los cuervos", next: 1 }, { text: "Tomar el sendero del riachuelo", next: 2 } ] }, { text: "Los cuervos parecen guiar a Metu hasta un claro oscuro. Eka siente algo... raro.", choices: [ { text: "Explorar el claro", next: 3 }, { text: "Regresar con Eka", next: 2 } ] }, { text: "El riachuelo murmura secretos. Un pez con ojos humanos salta y los mira.", choices: [ { text: "Ignorar y seguir", next: 3 }, { text: "Intentar atraparlo", next: 4 } ] }, { text: "Ambos caminos los llevan al mismo lugar: la entrada de una caverna. El cielo se tiñe de rojo mientras anochece. Un sonido familiar...", choices: [ { text: "Escuchar con atención", next: 5 } ] }, { text: "El pez habla: 'No deberías estar aquí, Metu'. Eka lo pisa sin querer y desaparece en humo.", choices: [ { text: "Correr hacia la caverna", next: 3 } ] }, { text: "Una voz: 'Metu... soy yo, Juri'. Es imposible. Su hermana está a cientos de kilómetros. Una sombra se mueve rápida..."," + " antes de que puedas reaccionar, algo aparece detras de ella. [Jumpscare].", choices: [ { text: "Continuar...", next: null } ] } ];
+const startButton = document.getElementById("start-button");
+const intro = document.getElementById("intro");
+const storyContainer = document.getElementById("story-container");
+const storyText = document.getElementById("story-text");
+const options = document.getElementById("options");
+const jumpscare = document.getElementById("jumpscare");
 
-let currentScene = 0;
+startButton.addEventListener("click", () => {
+  intro.style.display = "none";
+  storyContainer.style.display = "block";
+  showScene("intro");
+});
 
-function showScene(index) { const scene = scenes[index]; const textDiv = document.getElementById("scene-text"); const choicesDiv = document.getElementById("choices");
+const scenes = {
+  intro: {
+    text: "Es medianoche. Estás sola en casa con tu gemela, Juri. De repente escuchan un golpe en la puerta principal. Juri te mira, confundida.",
+    choices: [
+      { text: "Ir tú a revisar", next: "you_check" },
+      { text: "Decirle a Juri que revise", next: "juri_checks" }
+    ]
+  },
+  you_check: {
+    text: "Caminas hacia la puerta. Afuera no hay nadie, pero ves una nota que dice 'Ya entré'.",
+    choices: [
+      { text: "Cerrar con llave rápidamente", next: "lock_door" },
+      { text: "Buscar a Juri corriendo", next: "find_juri" }
+    ]
+  },
+  juri_checks: {
+    text: "Juri va a revisar. Pasa un minuto... no regresa.",
+    choices: [
+      { text: "Ir a buscarla", next: "find_juri" },
+      { text: "Cerrar con llave y esconderte", next: "hide" }
+    ]
+  },
+  lock_door: {
+    text: "Cierras con llave, pero al girarte... Juri está parada detrás de ti, con los ojos completamente negros.",
+    choices: [
+      { text: "Hablarle", next: "talk_to_juri" },
+      { text: "Correr", next: "run" }
+    ]
+  },
+  find_juri: {
+    text: "Buscas a Juri por la casa. La encuentras en la cocina, pero hay otra Juri en las escaleras.",
+    choices: [
+      { text: "¿Cuál es la real?", next: "which_juri" }
+    ]
+  },
+  hide: {
+    text: "Te escondes en el armario. Oyes pasos... pero no sabes si es Juri... o 'la otra'.",
+    choices: [
+      { text: "Salir del armario", next: "exit_closet" },
+      { text: "Quedarte callada", next: "stay_hidden" }
+    ]
+  },
+  which_juri: {
+    text: "Ambas Juri dicen: ¡Soy la verdadera! ¡No le creas a ella!",
+    choices: [
+      { text: "Preguntar algo que solo tu gemela sabría", next: "question" },
+      { text: "Correr sin confiar en ninguna", next: "run" }
+    ]
+  },
+  question: {
+    text: "La Juri falsa responde mal... sus ojos se vuelven negros. ¡Grita y corre hacia ti!",
+    choices: [
+      { text: "Cerrar los ojos", next: "end_jumpscare" },
+      { text: "Enfrentarla", next: "end_jumpscare" }
+    ]
+  },
+  exit_closet: {
+    text: "Sales del armario... y una figura idéntica a ti te observa desde el espejo.",
+    choices: [
+      { text: "Tocar el espejo", next: "end_jumpscare" },
+      { text: "Romperlo", next: "end_jumpscare" }
+    ]
+  },
+  stay_hidden: {
+    text: "Te quedas callada... hasta que escuchas: 'Te encontré' justo detrás de ti.",
+    choices: [
+      { text: "Gritar", next: "end_jumpscare" },
+      { text: "Correr", next: "end_jumpscare" }
+    ]
+  },
+  talk_to_juri: {
+    text: "Intentas hablarle... pero ella sonríe y dice: 'Ya no soy Juri'.",
+    choices: [
+      { text: "Retroceder", next: "end_jumpscare" },
+      { text: "Abrazarla", next: "end_jumpscare" }
+    ]
+  },
+  run: {
+    text: "Corres, pero no importa cuánto corras... siempre terminas en la misma habitación.",
+    choices: [
+      { text: "Gritar", next: "end_jumpscare" },
+      { text: "Cerrar los ojos", next: "end_jumpscare" }
+    ]
+  },
+  end_jumpscare: {
+    text: "",
+    choices: []
+  }
+};
 
-textDiv.textContent = scene.text; choicesDiv.innerHTML = "";
+function showScene(sceneKey) {
+  const scene = scenes[sceneKey];
+  if (sceneKey === "end_jumpscare") {
+    storyContainer.style.display = "none";
+    jumpscare.style.display = "block";
+    jumpscare.textContent = "¡AAAAAAAAAAAH!";
+    return;
+  }
 
-scene.choices.forEach(choice => { const button = document.createElement("button"); button.textContent = choice.text; button.onclick = () => { if (choice.next !== null) { showScene(choice.next); } else { textDiv.textContent = "[FIN DEL EPISODIO] ¿Continuar en el siguiente capítulo?"; choicesDiv.innerHTML = ""; } }; choicesDiv.appendChild(button); }); }
-
-window.onload = () => showScene(currentScene);
+  storyText.textContent = scene.text;
+  options.innerHTML = "";
+  scene.choices.forEach(choice => {
+    const button = document.createElement("button");
+    button.textContent = choice.text;
+    button.addEventListener("click", () => showScene(choice.next));
+    options.appendChild(button);
+  });
+}
