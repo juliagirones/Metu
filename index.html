@@ -7,12 +7,18 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div id="game">
-    <div id="scene">
-      <p id="text">La historia comienza en un bosque denso mientras Metu se despide de sus amigos y se aventura sola a investigar una antigua leyenda local...</p>
-    </div>
-    <div id="choices"></div>
+  <div id="intro">
+    <h1>Metu</h1>
+    <p>Una historia de misterio y decisiones...</p>
+    <button id="start-button">Comenzar</button>
   </div>
+
+  <div id="story-container" style="display:none;">
+    <div id="story-text"></div>
+    <div id="options"></div>
+  </div>
+
+  <div id="jumpscare" style="display:none;">👻</div>
 
   <script src="script.js"></script>
 </body>
