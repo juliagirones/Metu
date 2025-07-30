@@ -1,257 +1,81 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html><html lang="es">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Metu Halloween</title>
+  <title>Metu - Episodio 1: La Voz en la Caverna</title>
   <style>
     body {
       margin: 0;
-      background-color: black;
-      overflow: hidden;
-      font-family: sans-serif;
-      color: white;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #0d0d0d;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 2rem;
     }
-    #gameCanvas {
-      background-color: black;
-      display: block;
-      margin: 0 auto;
-      border: 2px solid white;
+    .scene {
+      max-width: 600px;
+      background: #1a1a1a;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
     }
-    #startMessage, #gameOverMessage, #levelCompleteMessage {
-      position: absolute;
-      top: 40%;
-      width: 100%;
-      text-align: center;
-      font-size: 2rem;
-      z-index: 10;
-      color: white;
+    .choice {
+      margin-top: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-    #score {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      font-size: 1.2rem;
-      z-index: 10;
-    }
-    .round-btn {
-      border-radius: 50%;
-      width: 60px;
-      height: 60px;
+    button {
+      padding: 1rem;
       font-size: 1rem;
+      background-color: #333;
       border: none;
-      margin: 10px;
+      color: white;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
     }
-    #restartBtn {
-      display: block;
-      margin: 20px auto;
-      font-size: 1.2rem;
-      padding: 10px 20px;
+    button:hover {
+      background-color: #555;
+    }
+    .jumpscare {
+      display: none;
+      font-size: 2rem;
+      color: red;
+      text-align: center;
+      margin-top: 2rem;
+      animation: flicker 1s infinite alternate;
+    }
+    @keyframes flicker {
+      0% { opacity: 0.2; }
+      100% { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="800" height="400"></canvas>
-  <div id="startMessage">3</div>
-  <div id="score">Dulces: 0</div>
-  <div id="gameOverMessage" style="display:none">GAME OVER!</div>
-  <div id="levelCompleteMessage" style="display:none">
-    🎉 ¡Nivel completado!<br />
-    🍭 Dulces recolectados: <span id="finalScore"></span><br />
-    <button id="restartBtn">Jugar de nuevo</button>
-  </div>
-  <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 10;">
-    <button class="round-btn" onclick="jump()">⬆</button>
-    <button class="round-btn" onclick="duck()">⬇</button>
+  <div class="scene" id="scene">
+    <p>La vegetación se abre. Una caverna irregular respira ante ti. El aire se congela. Una voz: <em>"Metu..."</em></p>
+    <div class="choice" id="choice">
+      <button onclick="enterCave()">¿Juri? Me acerco...</button>
+    </div>
+    <div class="jumpscare" id="jumpscare">¡¿QUÉ ES ESO?!</div>
   </div>  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const scoreDisplay = document.getElementById("score");
-    const startMessage = document.getElementById("startMessage");
-    const gameOverMessage = document.getElementById("gameOverMessage");
-    const levelCompleteMessage = document.getElementById("levelCompleteMessage");
-    const finalScore = document.getElementById("finalScore");
-    const restartBtn = document.getElementById("restartBtn");
-
-    let player = { x: 50, y: 300, width: 30, height: 30, jumping: false, ducking: false, velocityY: 0 };
-    let gravity = 1;
-    let score = 0;
-    let obstacles = [];
-    let candies = [];
-    let gameInterval;
-    let levelDuration = 60000; // 1 minuto
-    let startTime;
-
-    function drawPlayer() {
-      ctx.fillStyle = "white";
-      let height = player.ducking ? player.height / 2 : player.height;
-      ctx.fillRect(player.x, player.y - (height - player.height), player.width, height);
-    }
-
-    function drawObstacle(ob) {
-      ctx.fillStyle = "black";
-      ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
-    }
-
-    function drawCandy(c) {
-      ctx.strokeStyle = "white";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      if (c.type === 'lollipop') {
-        ctx.arc(c.x, c.y, 10, 0, 2 * Math.PI);
-        ctx.moveTo(c.x, c.y + 10);
-        ctx.lineTo(c.x, c.y + 20);
-      } else {
-        ctx.rect(c.x - 10, c.y - 5, 20, 10);
-      }
-      ctx.stroke();
-    }
-
-    function createObstacle() {
-      if (Math.random() < 0.5) {
-        // alto
-        obstacles.push({ x: 800, y: 300, width: 20, height: 40 });
-      } else {
-        // bajo
-        obstacles.push({ x: 800, y: 330, width: 20, height: 20 });
-      }
-    }
-
-    function createCandy() {
-      candies.push({ x: 800, y: Math.random() * 200 + 100, type: Math.random() > 0.5 ? 'lollipop' : 'candy' });
-    }
-
-    function jump() {
-      if (!player.jumping && !player.ducking) {
-        player.jumping = true;
-        player.velocityY = -15;
-      }
-    }
-
-    function duck() {
-      if (!player.jumping) {
-        player.ducking = true;
-        setTimeout(() => player.ducking = false, 500);
-      }
-    }
-
-    function vibrate(ms = 100) {
-      if (navigator.vibrate) navigator.vibrate(ms);
-    }
-
-    function gameLoop() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Tiempo y nivel completo
-      const elapsed = Date.now() - startTime;
-      if (elapsed >= levelDuration) {
-        clearInterval(gameInterval);
-        showLevelComplete();
-        return;
-      }
-
-      if (Math.random() < 0.01) createObstacle();
-      if (Math.random() < 0.02) createCandy();
-
-      drawPlayer();
-
-      // Obstáculos
-      for (let i = 0; i < obstacles.length; i++) {
-        let ob = obstacles[i];
-        ob.x -= 5;
-        drawObstacle(ob);
-        if (
-          player.x < ob.x + ob.width &&
-          player.x + player.width > ob.x &&
-          player.y < ob.y + ob.height &&
-          player.y + player.height > ob.y
-        ) {
-          gameOver();
-          return;
-        }
-      }
-
-      // Dulces
-      for (let i = 0; i < candies.length; i++) {
-        let c = candies[i];
-        c.x -= 4;
-        drawCandy(c);
-        if (
-          player.x < c.x + 10 &&
-          player.x + player.width > c.x - 10 &&
-          player.y < c.y + 10 &&
-          player.y + player.height > c.y - 10
-        ) {
-          candies.splice(i, 1);
-          score++;
-          vibrate(100);
-          scoreDisplay.innerText = `Dulces: ${score}`;
-        }
-      }
-
-      // Gravedad
-      if (player.jumping) {
-        player.y += player.velocityY;
-        player.velocityY += gravity;
-        if (player.y >= 300) {
-          player.y = 300;
-          player.jumping = false;
-        }
-      }
-    }
-
-    function gameOver() {
-      clearInterval(gameInterval);
-      gameOverMessage.style.display = "block";
-      setTimeout(startGame, 2000);
-    }
-
-    function showLevelComplete() {
-      const mermaidTail = new Image();
-      mermaidTail.onload = () => ctx.drawImage(mermaidTail, 700, 280, 80, 80);
-      mermaidTail.src = "data:image/svg+xml,<svg width='80' height='80' xmlns='http://www.w3.org/2000/svg'><path d='M40 10 C20 20, 10 40, 20 60 C40 50, 60 60, 70 40 C60 20, 40 10, 40 10 Z' fill='none' stroke='white' stroke-width='2'/></svg>";
+    function enterCave() {
+      const scene = document.getElementById('scene');
+      const choice = document.getElementById('choice');
+      const jumpscare = document.getElementById('jumpscare');
+      choice.innerHTML = '';
+      scene.innerHTML += '<p>La caverna emite un resplandor. Escuchas: <em>"Estoy aquí... por favor..."</em></p>';
       setTimeout(() => {
-        levelCompleteMessage.style.display = "block";
-        finalScore.innerText = score;
-      }, 1000);
-    }
-
-    function startCountdown() {
-      let count = 3;
-      startMessage.innerText = count;
-      const interval = setInterval(() => {
-        count--;
-        if (count === 0) {
-          startMessage.innerText = "HALLOWEEN!";
-        } else if (count < 0) {
-          clearInterval(interval);
-          startMessage.style.display = "none";
-          startGame();
-        } else {
-          startMessage.innerText = count;
-        }
-      }, 1000);
-    }
-
-    function startGame() {
-      score = 0;
-      player.y = 300;
-      player.jumping = false;
-      player.ducking = false;
-      player.velocityY = 0;
-      obstacles = [];
-      candies = [];
-      scoreDisplay.innerText = "Dulces: 0";
-      gameOverMessage.style.display = "none";
-      levelCompleteMessage.style.display = "none";
-      startTime = Date.now();
-      gameInterval = setInterval(gameLoop, 30);
-    }
-
-    restartBtn.addEventListener("click", () => {
-      startCountdown();
-      levelCompleteMessage.style.display = "none";
-    });
-
-    startCountdown();
-  </script></body>
-</html>
+        scene.innerHTML += '<p>Una figura enorme, con cuernos rotos y ojos huecos, aparece. Mira directamente hacia ti.</p>';
+        jumpscare.style.display = 'block';
+        setTimeout(() => {
+          scene.innerHTML += '<p><strong>To be continued...</strong></p>';
+        }, 2000);
+      }, 2000
+    
+          
